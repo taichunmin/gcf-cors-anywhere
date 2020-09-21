@@ -5,6 +5,38 @@ const createError = require('http-errors')
 const net = require('net')
 const router = require('express').Router()
 
+const getenv = (key, defaultval) => _.get(process, ['env', key], defaultval)
+
+const NODE_ENV = getenv('NODE_ENV', 'production')
+
+const errToJson = (() => {
+  const ERROR_KEYS = [
+    'address',
+    'code',
+    'data',
+    'dest',
+    'errno',
+    'info',
+    'message',
+    'name',
+    'originalError.response.data',
+    'path',
+    'port',
+    'reason',
+    'response.data',
+    'response.headers',
+    'response.status',
+    'stack',
+    'status',
+    'statusCode',
+    'statusMessage',
+    'syscall',
+  ]
+  return err => _.transform(ERROR_KEYS, (json, k) => {
+    if (_.hasIn(err, k)) _.set(json, k, _.get(err, k))
+  }, {})
+})()
+
 const OMIT_REQ_HEADERS = [
   'connection',
   'content-length',
@@ -64,15 +96,21 @@ router.all('*', cors(), async (req, res, next) => {
       url: await validateUrl(req.query.u),
       validateStatus: () => true,
     }
+    if (NODE_ENV !== 'production') {
+      console.log('req.headers = ', JSON.stringify(req.headers))
+      console.log('axiosConfig =', JSON.stringify(axiosConfig))
+    }
     _.each(OMIT_RES_HEADERS, header => { res.removeHeader(header) })
-    console.log('axiosConfig =', JSON.stringify(axiosConfig))
-    console.log('res._headers = ', JSON.stringify(res._headers))
     const axiosRes = await axios(axiosConfig)
     res.status(axiosRes.status).header(axiosRes.headers)
+    if (NODE_ENV !== 'production') {
+      console.log('axiosRes.headers = ', JSON.stringify(axiosRes.headers))
+      console.log('res._headers = ', JSON.stringify(res._headers))
+    }
     axiosRes.data.pipe(res)
   } catch (err) {
-    console.log('error =', JSON.stringify(err))
-    res.status(err.status || 500).send(err.message)
+    console.log('error =', JSON.stringify(errToJson(err)))
+    return next(err)
   }
 })
 
