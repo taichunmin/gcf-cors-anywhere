@@ -1,20 +1,17 @@
 {
   "dependencies": {
-    "axios": "^0.20.0",
-    "cors": "^2.8.5",
+    "axios": "^0.21.1",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
     "http-errors": "^1.8.0",
-    "joi": "^17.2.1",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "eslint": "^7.8.1",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.22.0",
+    "eslint": "^7.20.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
+    "eslint-plugin-promise": "^4.3.1",
+    "eslint-plugin-standard": "^5.0.0",
     "morgan": "^1.10.0"
   },
   "scripts": {
