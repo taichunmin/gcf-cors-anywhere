@@ -114,3 +114,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# other files
+.eslintrc.js
+.gcloudignore
+.git/
+.gitignore
+LICENSE
+README.md
+yarn.lock

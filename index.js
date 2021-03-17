@@ -59,25 +59,36 @@ const middlewares = [
     ctx.res.status(204).send('')
   },
 
-  // validateUrl
-  (() => {
-    const getTlds = async () => {
-      let cache = null
-      if (!cache) {
-        const data = _.get(await axios.get('https://data.iana.org/TLD/tlds-alpha-by-domain.txt'), 'data')
-        cache = _.filter(_.split(data, '\n'), row => row && !_.startsWith(row, '#'))
-      }
-      return cache
-    }
-    const isValidTld = async hostname => {
-      const parts = _.split(hostname, '.')
-      return parts.length > 1 && _.includes(await getTlds(), _.toUpper(_.last(parts)))
-    }
+  (() => { // valid url
+    const cache = {}
+    const isValidHostname = _.overSome([
+      hostname => net.isIP(hostname) !== 0,
+      hostname => {
+        const parts = _.split(hostname, '.')
+        return parts.length > 1 && _.includes(cache.tlds, _.toLower(_.last(parts)))
+      },
+    ])
     return async (ctx, next) => {
       const url = _.get(ctx, 'req.query.u')
-      if (!url) throw createError(400, 'u is required')
-      const hostname = new URL(url).hostname
-      if (!net.isIPv4(hostname) && !net.isIPv6(hostname) && !await isValidTld(hostname)) throw createError(400, `invalid hostname: ${hostname}`)
+      try {
+        const tmp = new URL(url)
+        if (!/^https?:$/.test(tmp.protocol)) throw new Error() // valid http/https
+
+        // update tlds
+        if (_.get(cache, 'updatedAt', 0) < Date.now() - 864e5) {
+          const txt = _.get(await axios.get('https://data.iana.org/TLD/tlds-alpha-by-domain.txt'), 'data')
+          cache.tlds = _.chain(txt)
+            .split(/\r?\n/)
+            .filter(row => _.isString(row) && row.length && !_.startsWith(row, '#'))
+            .map(_.toLower)
+            .value()
+          cache.updatedAt = Date.now()
+        }
+
+        if (!isValidHostname(tmp.hostname)) throw new Error() // valid hostname
+      } catch (err) {
+        throw createError(400, `invalid req.query.u: ${url}`)
+      }
       return await next()
     }
   })(),
@@ -154,9 +165,6 @@ exports.errToPlainObj = (() => {
     'info',
     'message',
     'name',
-    'originalError.response.data',
-    'originalError.response.headers',
-    'originalError.response.status',
     'path',
     'port',
     'reason',
