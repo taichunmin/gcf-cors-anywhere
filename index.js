@@ -75,14 +75,15 @@ const middlewares = [
         if (!/^https?:$/.test(tmp.protocol)) throw new Error() // valid http/https
 
         // update tlds
-        if (_.get(cache, 'updatedAt', 0) < Date.now() - 864e5) {
+        const nowms = Date.now()
+        if (_.toSafeInteger(cache.expiredAt) < nowms) {
           const txt = _.get(await axios.get('https://data.iana.org/TLD/tlds-alpha-by-domain.txt'), 'data')
           cache.tlds = _.chain(txt)
             .split(/\r?\n/)
             .filter(row => _.isString(row) && row.length && !_.startsWith(row, '#'))
             .map(_.toLower)
             .value()
-          cache.updatedAt = Date.now()
+          cache.expiredAt = nowms + 864e5
         }
 
         if (!isValidHostname(tmp.hostname)) throw new Error() // valid hostname
