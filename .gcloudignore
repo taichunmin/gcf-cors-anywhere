@@ -116,10 +116,13 @@ dist
 .pnp.*
 
 # other files
+.editorconfig
+.env.yaml
+.eslintignore
 .eslintrc.js
 .gcloudignore
 .git/
+.github/
 .gitignore
 LICENSE
 README.md
-yarn.lock
