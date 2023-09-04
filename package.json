@@ -15,7 +15,7 @@
     "morgan": "^1.10.0"
   },
   "scripts": {
-    "deploy": "gcloud beta functions deploy cors-anywhere --allow-unauthenticated --entry-point=main --env-vars-file=.env.yaml --gen2 --max-instances=1 --memory=128Mi --no-user-output-enabled --region=us-central1 --runtime=nodejs16 --timeout=60s --trigger-http",
+    "deploy": "gcloud functions deploy cors-anywhere --allow-unauthenticated --entry-point=main --env-vars-file=.env.yaml --gen2 --max-instances=1 --memory=128Mi --no-user-output-enabled --region=us-central1 --runtime=nodejs18 --timeout=60s --trigger-http && gcloud run services update cors-anywhere --region=us-central1 --cpu 1 --concurrency 80",
     "dev": "pm2 start dev.js --name cors-anywhere --watch --ignore-watch=\"node_modules\" --ignore-watch=\".git\" --restart-delay 1000 --no-daemon",
     "ngrok": "ngrok http 3000"
   }
