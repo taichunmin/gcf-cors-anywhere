@@ -118,6 +118,13 @@ const middlewares = [
     }
     _.each(OMIT_RES_HEADERS, header => { ctx.res.removeHeader(header) })
     const axiosRes = await axios(axiosConfig)
+
+    // Rewrite Set-Cookie header
+    _.update(axiosRes, 'headers.set-cookie', cookies => {
+      const rewriteCookie = cookie => cookie.replaceAll(/; (Secure|Partitioned|SameSite=[^;]+)/imsg, '') + '; SameSite=None; Secure; Partitioned'
+      return _.isArray(cookies) ? _.map(cookies, rewriteCookie) : rewriteCookie(cookies)
+    })
+
     ctx.res.status(axiosRes.status).header(axiosRes.headers)
     if (NODE_ENV !== 'production') {
       exports.log({
